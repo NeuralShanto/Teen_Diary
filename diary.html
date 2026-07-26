@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dear Me — a diary for the in-between years</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --twilight:#2B2A4C;
+    --twilight-2:#3D3A6B;
+    --twilight-3:#4C4880;
+    --lavender:#B8A9E3;
+    --peach:#FFB4A2;
+    --peach-deep:#F2876E;
+    --sage:#8FBFA0;
+    --sage-deep:#6FA789;
+    --cloud:#FAF8FF;
+    --coral:#FF6F61;
+    --ink:#211F3D;
+    --muted:#8985B3;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Poppins',sans-serif;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(184,169,227,0.18), transparent 40%),
+      radial-gradient(circle at 85% 15%, rgba(255,180,162,0.12), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(143,191,160,0.10), transparent 45%),
+      linear-gradient(160deg, #201F3B 0%, #2B2A4C 55%, #211F3D 100%);
+    color:var(--ink);
+    padding:28px 12px;
+    overflow-x:hidden;
+  }
+  .page-title{
+    position:fixed; top:22px; left:32px; color:var(--cloud); opacity:0.55;
+    font-family:'Fredoka',sans-serif; font-size:14px; letter-spacing:2px; text-transform:uppercase;
+  }
+  .page-title span{color:var(--peach); opacity:1;}
+
+  /* ---------- Phone frame ---------- */
+  .phone{
+    position:relative;
+    width:380px; height:790px;
+    background:linear-gradient(180deg,#161528,#0f0e1e);
+    border-radius:46px;
+    padding:14px;
+    box-shadow:
+      0 40px 80px -20px rgba(0,0,0,0.6),
+      0 0 0 2px rgba(255,255,255,0.04) inset,
+      0 0 60px rgba(184,169,227,0.08);
+  }
+  .screen-wrap{
+    position:relative;
+    width:100%; height:100%;
+    background:var(--cloud);
+    border-radius:34px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .notch{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:22px; background:#161528; border-radius:0 0 16px 16px; z-index:50;
+  }
+
+  /* ---------- Screens ---------- */
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    opacity:0; pointer-events:none;
+    transform:scale(0.98);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .screen.active{ opacity:1; pointer-events:auto; transform:scale(1); }
+  .screen-body{ flex:1; overflow-y:auto; padding:22px 20px 100px; }
+  .screen-body::-webkit-scrollbar{width:0;}
+
+  /* ---------- Cover screen ---------- */
+  #screen-cover{
+    background:
+      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.9), transparent),
+      radial-gradient(1.5px 1.5px at 70% 20%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(2px 2px at 85% 60%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 40% 75%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1.5px 1.5px at 15% 85%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 60% 45%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(2px 2px at 92% 88%, rgba(255,255,255,0.7), transparent),
+      linear-gradient(160deg, var(--twilight-3), var(--twilight) 60%, #1B1A33);
+    align-items:center; justify-content:center; text-align:center;
+    padding:40px;
+  }
+  .cover-book{
+    width:210px; height:280px;
+    background:linear-gradient(150deg,#4C4880,#3D3A6B);
+    border-radius:6px 14px 14px 6px;
+    box-shadow:0 25px 50px rgba(0,0,0,0.45), inset -6px 0 0 rgba(0,0,0,0.15);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    position:relative; margin-bottom:34px;
+  }
+  .cover-book:before{
+    content:''; position:absolute; left:14px; top:10px; bottom:10px; width:2px;
+    background:rgba(255,255,255,0.12);
+  }
+  .cover-title{ font-family:'Caveat',cursive; font-size:38px; color:var(--cloud); font-weight:700; }
+  .cover-sub{ font-family:'Poppins'; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--lavender); margin-top:6px;}
+  .cover-seal{
+    width:34px; height:34px; border-radius:50%; background:var(--peach);
+    position:absolute; right:-10px; top:50%; transform:translateY(-50%);
+    box-shadow:0 6px 14px rgba(0,0,0,0.35);
+  }
+  .cover-tagline{ color:var(--cloud); opacity:0.8; font-size:14px; max-width:230px; line-height:1.6; margin-bottom:34px;}
+  .btn-open{
+    width:92px; height:92px; border-radius:50%; border:none; cursor:pointer;
+    background:radial-gradient(circle at 35% 30%, #FFCEC1, var(--peach) 60%, var(--peach-deep));
+    color:var(--ink); font-family:'Fredoka'; font-weight:600; font-size:15px;
+    box-shadow:0 12px 30px rgba(255,180,162,0.35);
+    transition:transform .2s ease;
+  }
+  .btn-open:active{ transform:scale(0.94); }
+
+  /* ---------- Top bars ---------- */
+  .topbar{
+    padding:22px 20px 12px; display:flex; align-items:center; justify-content:space-between;
+    background:var(--cloud);
+  }
+  .greeting{ font-family:'Fredoka'; font-size:21px; color:var(--ink); }
+  .greeting b{ color:var(--peach-deep); }
+  .streak{
+    display:flex; align-items:center; gap:5px; background:#FFF1EC; color:var(--peach-deep);
+    font-size:13px; font-weight:600; padding:6px 12px; border-radius:20px;
+  }
+  .subtitle{ color:var(--muted); font-size:13px; margin-top:2px;}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:#fff; border-radius:20px; padding:18px 18px; margin-bottom:16px;
+    box-shadow:0 6px 20px rgba(43,42,76,0.06);
+  }
+  .card h3{ margin:0 0 4px; font-family:'Fredoka'; font-size:16px; color:var(--ink);}
+  .card p.hint{ margin:0 0 14px; color:var(--muted); font-size:12.5px; }
+
+  .mood-row{ display:flex; justify-content:space-between; }
+  .mood-btn{
+    width:46px; height:46px; border-radius:50%; border:2px solid transparent; background:#F4F2FA;
+    font-size:22px; cursor:pointer; transition:all .18s ease;
+  }
+  .mood-btn.selected{ border-color:var(--peach); background:#FFF1EC; transform:translateY(-3px) scale(1.08); }
+  .mood-response{
+    margin-top:14px; padding:12px 14px; background:#F4F2FA; border-radius:14px; font-size:13px;
+    color:var(--ink); display:none; line-height:1.5;
+  }
+  .mood-response.show{ display:block; }
+  .mood-response a.link-btn{ display:inline-block; margin-top:8px; color:var(--peach-deep); font-weight:600; cursor:pointer; font-size:12.5px;}
+
+  .affirmation-card{ background:linear-gradient(135deg,#8FBFA0,#6FA789); color:#fff; }
+  .affirmation-card h3{ color:#fff; }
+  .affirmation-card p.hint{ color:rgba(255,255,255,0.85); }
+  .affirmation-text{ font-family:'Caveat'; font-size:22px; line-height:1.4; }
+
+  .quick-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .quick-item{
+    background:#fff; border-radius:18px; padding:16px 14px; box-shadow:0 6px 20px rgba(43,42,76,0.06);
+    cursor:pointer; transition:transform .15s ease; border:none; text-align:left; font-family:'Poppins';
+  }
+  .quick-item:active{ transform:scale(0.96); }
+  .quick-emoji{ font-size:22px; display:block; margin-bottom:8px;}
+  .quick-label{ font-weight:600; font-size:13px; color:var(--ink);}
+  .quick-sub{ font-size:11px; color:var(--muted); margin-top:2px;}
+
+  /* ---------- Journal ---------- */
+  .prompt-row{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:14px; }
+  .prompt-chip{
+    flex:none; background:#F4F2FA; color:var(--ink); border:none; border-radius:14px;
+    padding:9px 14px; font-size:12px; cursor:pointer; white-space:nowrap;
+  }
+  .prompt-chip:active{ background:var(--lavender); color:#fff; }
+  textarea#entryText{
+    width:100%; min-height:130px; border:none; border-radius:16px; padding:16px;
+    background:repeating-linear-gradient(#fff, #fff 27px, #ECE8F7 28px);
+    font-family:'Caveat'; font-size:20px; line-height:28px; color:var(--ink);
+    resize:none; outline:none; box-shadow:0 6px 20px rgba(43,42,76,0.06);
+  }
+  .save-row{ display:flex; justify-content:flex-end; margin:12px 0 20px;}
+  .btn-save{
+    background:var(--peach-deep); color:#fff; border:none; border-radius:14px; padding:11px 22px;
+    font-weight:600; font-size:13px; cursor:pointer; font-family:'Poppins';
+  }
+  .entry-item{ background:#fff; border-radius:16px; padding:14px 16px; margin-bottom:10px; box-shadow:0 6px 16px rgba(43,42,76,0.05); }
+  .entry-meta{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:6px;}
+  .entry-text{ font-family:'Caveat'; font-size:18px; color:var(--ink); line-height:1.35; }
+  .empty-note{ text-align:center; color:var(--muted); font-size:12.5px; padding:20px 10px;}
+
+  /* ---------- Toolkit ---------- */
+  .breathe-wrap{ display:flex; flex-direction:column; align-items:center; padding:10px 0 6px; }
+  .breathe-circle{
+    width:130px; height:130px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #D9CCF5, var(--lavender) 70%);
+    display:flex; align-items:center; justify-content:center; color:#fff;
+    font-family:'Fredoka'; font-size:14px; text-align:center;
+    transition:transform 4s ease-in-out;
+    box-shadow:0 10px 30px rgba(184,169,227,0.4);
+  }
+  .breathe-circle.big{ transform:scale(1.35); }
+  .breathe-btn{
+    margin-top:16px; background:var(--twilight-2); color:#fff; border:none; border-radius:14px;
+    padding:9px 20px; font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .flip-card{ perspective:800px; height:100px; cursor:pointer; }
+  .flip-inner{ position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
+  .flip-card.flipped .flip-inner{ transform:rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:16px;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:14px;
+    font-family:'Caveat'; font-size:19px; color:#fff;
+  }
+  .flip-front{ background:linear-gradient(135deg,var(--sage),var(--sage-deep)); }
+  .flip-back{ background:linear-gradient(135deg,var(--lavender),#8f7fc9); transform:rotateY(180deg); }
+
+  .accordion-item{ background:#fff; border-radius:16px; margin-bottom:10px; overflow:hidden; box-shadow:0 6px 16px rgba(43,42,76,0.05); }
+  .accordion-head{ padding:14px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; font-size:13.5px; }
+  .accordion-body{ max-height:0; overflow:hidden; transition:max-height .3s ease; padding:0 16px; font-size:12.5px; color:var(--ink); line-height:1.6; }
+  .accordion-item.open .accordion-body{ max-height:220px; padding-bottom:14px; }
+  .accordion-arrow{ transition:transform .25s ease; color:var(--muted); }
+  .accordion-item.open .accordion-arrow{ transform:rotate(180deg); }
+
+  .bully-steps{ list-style:none; padding:0; margin:10px 0 0; }
+  .bully-steps li{ display:flex; gap:10px; margin-bottom:10px; font-size:13px; align-items:flex-start;}
+  .bully-steps .num{ background:var(--coral); color:#fff; width:20px; height:20px; border-radius:50%; font-size:11px; display:flex; align-items:center; justify-content:center; flex:none; font-weight:700;}
+
+  /* ---------- Circle / settings ---------- */
+  .contact-row{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #F0EDF9;}
+  .contact-row:last-child{ border-bottom:none; }
+  .avatar-dot{ width:38px; height:38px; border-radius:50%; background:var(--lavender); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-family:'Fredoka'; }
+  .contact-name{ font-weight:600; font-size:13.5px; }
+  .contact-rel{ font-size:11.5px; color:var(--muted); }
+  .btn-add{ margin-left:auto; background:#F4F2FA; border:none; border-radius:10px; padding:6px 12px; font-size:12px; cursor:pointer; color:var(--ink); font-weight:600;}
+  .helpline{ background:#FFF1EC; border-radius:14px; padding:12px 14px; font-size:12.5px; margin-top:4px; line-height:1.6;}
+  .helpline b{ color:var(--peach-deep);}
+  .settings-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #F0EDF9; font-size:13px;}
+  .settings-row:last-child{ border-bottom:none;}
+  input.inline-input{ border:1px solid #E4DFF5; border-radius:10px; padding:6px 10px; font-size:12.5px; font-family:'Poppins'; width:110px;}
+  .toggle{ width:42px; height:24px; border-radius:12px; background:#E4DFF5; position:relative; cursor:pointer; flex:none;}
+  .toggle.on{ background:var(--sage); }
+  .toggle:after{ content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s ease;}
+  .toggle.on:after{ left:20px; }
+  .footer-note{ text-align:center; color:var(--muted); font-size:10.5px; line-height:1.6; margin-top:18px; padding:0 6px;}
+
+  /* ---------- Bottom nav ---------- */
+  .tabbar{
+    position:absolute; bottom:0; left:0; right:0; height:74px;
+    background:#fff; border-top:1px solid #F0EDF9;
+    display:flex; align-items:center; justify-content:space-around;
+    padding-bottom:8px;
+  }
+  .tab-btn{ background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:var(--muted); font-family:'Poppins'; font-size:10px; }
+  .tab-btn .tab-emoji{ font-size:19px; opacity:0.55; transition:opacity .2s ease; }
+  .tab-btn.active{ color:var(--peach-deep); font-weight:600; }
+  .tab-btn.active .tab-emoji{ opacity:1; }
+
+  /* ---------- Safety modal ---------- */
+  .modal-overlay{
+    position:absolute; inset:0; background:rgba(33,31,61,0.55); z-index:80;
+    display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .modal-box{ background:#fff; border-radius:22px; padding:24px 22px; width:85%; text-align:center; }
+  .modal-box h3{ font-family:'Fredoka'; color:var(--ink); margin:0 0 10px;}
+  .modal-box p{ font-size:13px; color:var(--ink); line-height:1.6; margin:0 0 14px;}
+  .modal-box .helpline{ text-align:left; }
+  .modal-actions{ display:flex; gap:10px; margin-top:14px;}
+  .modal-actions button{ flex:1; border:none; border-radius:12px; padding:10px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Poppins';}
+  .modal-btn-primary{ background:var(--peach-deep); color:#fff;}
+  .modal-btn-secondary{ background:#F4F2FA; color:var(--ink);}
+
+  @media (max-width:420px){
+    .phone{ width:100%; max-width:380px; height:88vh; min-height:640px;}
+    .page-title{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">Dear Me <span>· a diary for teens</span></div>
+
+<div class="phone">
+  <div class="screen-wrap">
+    <div class="notch"></div>
+
+    <!-- COVER -->
+    <div class="screen active" id="screen-cover">
+      <div class="cover-book">
+        <div class="cover-title">Dear Me,</div>
+        <div class="cover-sub">a private space</div>
+        <div class="cover-seal"></div>
+      </div>
+      <div class="cover-tagline">Whatever today was — good, awful, confusing — you get to say it here first. Only you can read this.</div>
+      <button class="btn-open" onclick="openDiary()">Open</button>
+    </div>
+
+    <!-- HOME -->
+    <div class="screen" id="screen-home">
+      <div class="topbar">
+        <div>
+          <div class="greeting">Hey <b id="homeName">friend</b> 🌙</div>
+          <div class="subtitle" id="todayDate"></div>
+        </div>
+        <div class="streak">🔥 <span id="streakCount">0</span> day streak</div>
+      </div>
+      <div class="screen-body">
+        <div class="card">
+          <h3>How are you, right now?</h3>
+          <p class="hint">Not for anyone else. Just checking in with you.</p>
+          <div class="mood-row">
+            <button class="mood-btn" data-mood="1" onclick="pickMood(1,this)">😞</button>
+            <button class="mood-btn" data-mood="2" onclick="pickMood(2,this)">🙁</button>
+            <button class="mood-btn" data-mood="3" onclick="pickMood(3,this)">😐</button>
+            <button class="mood-btn" data-mood="4" onclick="pickMood(4,this)">🙂</button>
+            <button class="mood-btn" data-mood="5" onclick="pickMood(5,this)">😄</button>
+          </div>
+          <div class="mood-response" id="moodResponse"></div>
+        </div>
+
+        <div class="card affirmation-card">
+          <h3>✨ Today's reminder</h3>
+          <p class="hint">A little something for the road</p>
+          <div class="affirmation-text" id="affirmationText"></div>
+        </div>
+
+        <div class="quick-grid">
+          <button class="quick-item" onclick="goTab('journal')">
+            <span class="quick-emoji">📖</span>
+            <div class="quick-label">Write today</div>
+            <div class="quick-sub">get it out of your head</div>
+          </button>
+          <button class="quick-item" onclick="goTab('toolkit'); showToolkitSection('breathe')">
+            <span class="quick-emoji">🫧</span>
+            <div class="quick-label">Just breathe</div>
+            <div class="quick-sub">60 seconds, that's it</div>
+          </button>
+          <button class="quick-item" onclick="goTab('toolkit'); showToolkitSection('peer')">
+            <span class="quick-emoji">🛡️</span>
+            <div class="quick-label">Feeling pressured?</div>
+            <div class="quick-sub">scripts that help</div>
+          </button>
+          <button class="quick-item" onclick="goTab('circle')">
+            <span class="quick-emoji">🤝</span>
+            <div class="quick-label">Talk to someone</div>
+            <div class="quick-sub">you don't have to carry it alone</div>
+          </button>
+        </div>
+      </div>
+      <div class="tabbar" id="tabbar-home"></div>
+    </div>
+
+    <!-- JOURNAL -->
+    <div class="screen" id="screen-journal">
+      <div class="topbar">
+        <div>
+          <div class="greeting" style="font-size:19px;">Your pages</div>
+          <div class="subtitle">write whatever's true right now</div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="prompt-row" id="promptRow"></div>
+        <textarea id="entryText" placeholder="Write freely. No one reads this but you."></textarea>
+        <div class="save-row"><button class="btn-save" onclick="saveEntry()">Save this page</button></div>
+        <div id="entryList"></div>
+      </div>
+      <div class="tabbar" id="tabbar-journal"></div>
+    </div>
+
+    <!-- TOOLKIT -->
+    <div class="screen" id="screen-toolkit">
+      <div class="topbar">
+        <div>
+          <div class="greeting" style="font-size:19px;">Your toolkit</div>
+          <div class="subtitle">small things that actually help</div>
+        </div>
+      </div>
+      <div class="screen-body">
+
+        <div class="card" id="section-breathe">
+          <h3>🫧 Breathe with me</h3>
+          <p class="hint">Box breathing: in 4, hold 4, out 4</p>
+          <div class="breathe-wrap">
+            <div class="breathe-circle" id="breatheCircle">Ready?</div>
+            <button class="breathe-btn" id="breatheBtn" onclick="toggleBreathe()">Start</button>
+          </div>
+        </div>
+
+        <div class="card" id="section-affirm">
+          <h3>💬 Words for today</h3>
+          <p class="hint">Tap the card for another one</p>
+          <div class="flip-card" id="flipCard" onclick="flipAffirmation()">
+            <div class="flip-inner">
+              <div class="flip-face flip-front" id="flipFront"></div>
+              <div class="flip-face flip-back" id="flipBack"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="section-peer">
+          <h3>🛡️ When someone's pushing you</h3>
+          <p class="hint">Tap a situation for a script you can actually use</p>
+          <div id="accordionWrap"></div>
+        </div>
+
+        <div class="card" id="section-bully">
+          <h3>🚫 If you're being bullied</h3>
+          <p class="hint">This is not your fault. Here's what can help:</p>
+          <ul class="bully-steps">
+            <li><span class="num">1</span> Tell one trusted adult — a parent, teacher, or counselor. You shouldn't have to handle this alone.</li>
+            <li><span class="num">2</span> Save the evidence — screenshots, messages, dates. It helps adults act on it.</li>
+            <li><span class="num">3</span> Remind yourself: their behavior says something about them, not about your worth.</li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="tabbar" id="tabbar-toolkit"></div>
+    </div>
+
+    <!-- CIRCLE / SETTINGS -->
+    <div class="screen" id="screen-circle">
+      <div class="topbar">
+        <div>
+          <div class="greeting" style="font-size:19px;">Your circle</div>
+          <div class="subtitle">people & help you can reach, on your terms</div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="card">
+          <h3>Trusted people</h3>
+          <p class="hint">Nothing is shared automatically. You choose what, and when.</p>
+          <div id="contactList"></div>
+          <button class="btn-add" onclick="addContact()" style="margin-top:8px;">+ Add someone</button>
+        </div>
+
+        <div class="card">
+          <h3>Need to talk right now?</h3>
+          <p class="hint">Free, confidential support lines</p>
+          <div class="helpline">
+            <b>Bangladesh — Kaan Pete Roi:</b> 09611-677-777 (emotional support helpline)<br><br>
+            <b>Anywhere:</b> reach out to a school counselor, parent, or trusted adult today. If you're in immediate danger, contact local emergency services.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Privacy & settings</h3>
+          <div class="settings-row">
+            <span>Your nickname</span>
+            <input class="inline-input" id="nicknameInput" placeholder="e.g. Ash" />
+          </div>
+          <div class="settings-row">
+            <span>Disguise app icon</span>
+            <div class="toggle" id="disguiseToggle" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-row">
+            <span>App lock (PIN)</span>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-row">
+            <span>Clear all my entries</span>
+            <button class="btn-add" onclick="clearEntries()">Clear</button>
+          </div>
+        </div>
+        <div class="footer-note">Dear Me is a private self-help space — it doesn't replace a counselor, doctor, or trusted adult. If you're ever in danger, please reach out to them or local emergency services.</div>
+      </div>
+      <div class="tabbar" id="tabbar-circle"></div>
+    </div>
+
+    <!-- SAFETY MODAL -->
+    <div class="modal-overlay" id="safetyModal">
+      <div class="modal-box">
+        <h3>Hey — that sounds really heavy 💛</h3>
+        <p>It sounds like you might be going through something serious right now. You don't have to face it by yourself.</p>
+        <div class="helpline">
+          <b>Bangladesh — Kaan Pete Roi:</b> 09611-677-777<br><br>
+          Please tell a parent, teacher, or another adult you trust — today, if you can. If you're in immediate danger, contact local emergency services right away.
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn-secondary" onclick="closeSafetyModal()">Keep writing privately</button>
+          <button class="modal-btn-primary" onclick="closeSafetyModal(); goTab('circle')">See who I can talk to</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ---------------- data ---------------- */
+const affirmations = [
+  "You are allowed to take up space, exactly as you are.",
+  "One hard day doesn't undo all your good days.",
+  "You don't owe anyone an explanation for protecting your peace.",
+  "Growing up is confusing for everyone — you're not behind.",
+  "Their opinion of you is not the whole truth of you.",
+  "It's okay to outgrow people, habits, and old versions of yourself.",
+  "You can be a work in progress and still be worthy of love today.",
+  "Asking for help is a strength, not a weakness."
+];
+
+const prompts = [
+  "What made you smile today, even a little?",
+  "Something that's been heavy on your mind...",
+  "A moment today you felt brave",
+  "Something I wish an adult understood about me",
+  "A friend who made today better",
+  "Something I'm proud of myself for"
+];
+
+const peerScenarios = [
+  {
+    title: "They want you to skip class or lie to a teacher",
+    body: "Try: “Nah, I'm good — if I get caught it's my problem, not yours.” You can say no without a long explanation. A real friend won't push after that."
+  },
+  {
+    title: "They're making fun of someone in the group chat",
+    body: "Try: “That's kind of harsh, not gonna lie.” or just don't react — silence isn't agreement. Leaving the chat or muting it is also a valid move."
+  },
+  {
+    title: "They want you to try something you're not ready for",
+    body: "Try: “Not my thing, but you do you.” If they keep pushing, it's okay to physically walk away. You don't need a perfect excuse to say no."
+  },
+  {
+    title: "They're pressuring you to share a private photo or secret",
+    body: "Try: “I don't share that stuff, sorry.” This is one to tell a trusted adult about too — pressure like this isn't okay, and you won't be in trouble for asking for help."
+  }
+];
+
+const moodReplies = {
+  1: "That sounds really hard. It's okay to not be okay — want to try a quick breathing exercise, or write it out?",
+  2: "Rough moment. You don't have to fix it right now — just naming it here is enough for today.",
+  3: "A calm, in-between kind of day. Those count too.",
+  4: "Good to hear. What's one thing that helped today?",
+  5: "Love that for you! Worth writing down so future-you remembers this feeling."
+};
+
+/* ---------------- storage helpers ---------------- */
+const store = {
+  get(k, d){ try{ const v = JSON.parse(localStorage.getItem('deardiary_'+k)); return v===null?d:v; }catch(e){ return d; } },
+  set(k, v){ localStorage.setItem('deardiary_'+k, JSON.stringify(v)); }
+};
+
+/* ---------------- cover / open ---------------- */
+function openDiary(){
+  document.getElementById('screen-cover').classList.remove('active');
+  document.getElementById('screen-home').classList.add('active');
+}
+
+/* ---------------- tab navigation ---------------- */
+const tabs = [
+  {id:'home', label:'Home', emoji:'🏠'},
+  {id:'journal', label:'Journal', emoji:'📖'},
+  {id:'toolkit', label:'Toolkit', emoji:'🧰'},
+  {id:'circle', label:'Circle', emoji:'🤝'}
+];
+function buildTabbars(){
+  document.querySelectorAll('.tabbar').forEach(bar=>{
+    bar.innerHTML = tabs.map(t=>`<button class="tab-btn" data-tab="${t.id}" onclick="goTab('${t.id}')"><span class="tab-emoji">${t.emoji}</span>${t.label}</button>`).join('');
+  });
+  refreshTabActive();
+}
+function goTab(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  refreshTabActive(id);
+}
+function refreshTabActive(id){
+  const current = id || document.querySelector('.screen.active').id.replace('screen-','');
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===current);
+  });
+}
+
+/* ---------------- home: date, streak, mood, affirmation ---------------- */
+function initHome(){
+  const today = new Date();
+  document.getElementById('todayDate').textContent = today.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+  document.getElementById('streakCount').textContent = store.get('streak', 0);
+  document.getElementById('affirmationText').textContent = "“" + affirmations[Math.floor(Math.random()*affirmations.length)] + "”";
+  const name = store.get('nickname','');
+  document.getElementById('homeName').textContent = name || 'friend';
+  document.getElementById('nicknameInput').value = name;
+}
+function pickMood(val, btn){
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const box = document.getElementById('moodResponse');
+  let extra = '';
+  if(val<=2){ extra = '<br><a class="link-btn" onclick="goTab(\'toolkit\'); showToolkitSection(\'breathe\')">Try a 60-second breathing exercise →</a>'; }
+  box.innerHTML = moodReplies[val] + extra;
+  box.classList.add('show');
+  store.set('lastMood', val);
+}
+
+/* ---------------- journal ---------------- */
+const alertWords = ["kill myself","end it all","want to disappear","hurt myself","no reason to live","end my life"];
+
+function buildPrompts(){
+  document.getElementById('promptRow').innerHTML = prompts.map(p=>`<button class="prompt-chip" onclick="usePrompt('${p.replace(/'/g,"\\'")}')">${p}</button>`).join('');
+}
+function usePrompt(p){
+  const ta = document.getElementById('entryText');
+  ta.value = p + "\n";
+  ta.focus();
+}
+function saveEntry(){
+  const text = document.getElementById('entryText').value.trim();
+  if(!text) return;
+  const lower = text.toLowerCase();
+  const flagged = alertWords.some(w=>lower.includes(w));
+  if(flagged){
+    document.getElementById('safetyModal').classList.add('show');
+  }
+  const entries = store.get('entries', []);
+  entries.unshift({ text, date: new Date().toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}), mood: store.get('lastMood', null) });
+  store.set('entries', entries);
+  document.getElementById('entryText').value = '';
+  bumpStreak();
+  renderEntries();
+}
+function bumpStreak(){
+  const last = store.get('lastEntryDay', '');
+  const today = new Date().toDateString();
+  if(last !== today){
+    store.set('streak', store.get('streak',0)+1);
+    store.set('lastEntryDay', today);
+    document.getElementById('streakCount').textContent = store.get('streak',0);
+  }
+}
+function renderEntries(){
+  const entries = store.get('entries', []);
+  const wrap = document.getElementById('entryList');
+  if(entries.length===0){ wrap.innerHTML = '<div class="empty-note">Your saved pages will show up here. Only you can see them.</div>'; return; }
+  wrap.innerHTML = entries.map((e,i)=>`
+    <div class="entry-item">
+      <div class="entry-meta"><span>${e.date}</span><span onclick="deleteEntry(${i})" style="cursor:pointer;">🗑</span></div>
+      <div class="entry-text">${e.text.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+function deleteEntry(i){
+  const entries = store.get('entries', []);
+  entries.splice(i,1);
+  store.set('entries', entries);
+  renderEntries();
+}
+function clearEntries(){
+  store.set('entries', []);
+  renderEntries();
+}
+function closeSafetyModal(){
+  document.getElementById('safetyModal').classList.remove('show');
+}
+
+/* ---------------- toolkit ---------------- */
+let breatheOn = false, breatheTimer = null, breathePhase = 0;
+function toggleBreathe(){
+  const circle = document.getElementById('breatheCircle');
+  const btn = document.getElementById('breatheBtn');
+  breatheOn = !breatheOn;
+  if(breatheOn){
+    btn.textContent = 'Stop';
+    breathePhase = 0;
+    runBreathe();
+  } else {
+    btn.textContent = 'Start';
+    clearTimeout(breatheTimer);
+    circle.classList.remove('big');
+    circle.textContent = 'Ready?';
+  }
+}
+function runBreathe(){
+  const circle = document.getElementById('breatheCircle');
+  const phases = [
+    {label:'Breathe in...', big:true},
+    {label:'Hold...', big:true},
+    {label:'Breathe out...', big:false},
+    {label:'Hold...', big:false}
+  ];
+  const step = phases[breathePhase % phases.length];
+  circle.textContent = step.label;
+  circle.classList.toggle('big', step.big);
+  breathePhase++;
+  if(breatheOn){ breatheTimer = setTimeout(runBreathe, 4000); }
+}
+
+function newAffirmation(){
+  document.getElementById('flipFront').textContent = "“" + affirmations[Math.floor(Math.random()*affirmations.length)] + "”";
+  document.getElementById('flipBack').textContent = "“" + affirmations[Math.floor(Math.random()*affirmations.length)] + "”";
+}
+function flipAffirmation(){
+  const card = document.getElementById('flipCard');
+  card.classList.toggle('flipped');
+  setTimeout(()=>{
+    const hiddenFace = card.classList.contains('flipped') ? document.getElementById('flipFront') : document.getElementById('flipBack');
+    hiddenFace.textContent = "“" + affirmations[Math.floor(Math.random()*affirmations.length)] + "”";
+  }, 500);
+}
+
+function buildAccordion(){
+  document.getElementById('accordionWrap').innerHTML = peerScenarios.map((s,i)=>`
+    <div class="accordion-item" id="acc-${i}">
+      <div class="accordion-head" onclick="toggleAccordion(${i})">
+        <span>${s.title}</span>
+        <span class="accordion-arrow">⌄</span>
+      </div>
+      <div class="accordion-body">${s.body}</div>
+    </div>`).join('');
+}
+function toggleAccordion(i){
+  document.getElementById('acc-'+i).classList.toggle('open');
+}
+function showToolkitSection(name){
+  const map = { breathe:'section-breathe', peer:'section-peer', affirm:'section-affirm', bully:'section-bully' };
+  const el = document.getElementById(map[name]);
+  if(el){ setTimeout(()=> el.scrollIntoView({behavior:'smooth', block:'start'}), 350); }
+}
+
+/* ---------------- circle ---------------- */
+function renderContacts(){
+  const contacts = store.get('contacts', [{name:'Mom', rel:'Parent'}]);
+  document.getElementById('contactList').innerHTML = contacts.map(c=>`
+    <div class="contact-row">
+      <div class="avatar-dot">${c.name.charAt(0).toUpperCase()}</div>
+      <div><div class="contact-name">${c.name}</div><div class="contact-rel">${c.rel}</div></div>
+    </div>`).join('');
+}
+function addContact(){
+  const name = prompt("Their name?");
+  if(!name) return;
+  const rel = prompt("Who are they to you? (e.g. Parent, Teacher, Friend)") || "Trusted person";
+  const contacts = store.get('contacts', []);
+  contacts.push({name, rel});
+  store.set('contacts', contacts);
+  renderContacts();
+}
+
+/* ---------------- settings ---------------- */
+document.addEventListener('input', (e)=>{
+  if(e.target.id === 'nicknameInput'){
+    store.set('nickname', e.target.value);
+    document.getElementById('homeName').textContent = e.target.value || 'friend';
+  }
+});
+
+/* ---------------- init ---------------- */
+buildTabbars();
+initHome();
+buildPrompts();
+renderEntries();
+newAffirmation();
+buildAccordion();
+renderContacts();
+</script>
+</body>
+</html>
